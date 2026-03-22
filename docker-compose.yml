@@ -65,7 +65,7 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=vaultwarden_default"
+      - "traefik.docker.network=${TRAEFIK_NETWORK_NAME:-traefik_default}"
       - "traefik.http.routers.outline.rule=Host(`${OUTLINE_HOST}`)"
       - "traefik.http.routers.outline.entrypoints=websecure"
       - "traefik.http.routers.outline.tls.certresolver=${TRAEFIK_CERTRESOLVER:-myresolver}"
