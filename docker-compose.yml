@@ -20,7 +20,7 @@ services:
       URL: https://${OUTLINE_HOST}
 
       # --- Database ---
-      DATABASE_URL: postgres://${POSTGRES_USER:-outline}:${POSTGRES_PASSWORD}@outline-db:5432/${POSTGRES_DB:-outline}
+      DATABASE_URL: postgres://${POSTGRES_USER:-outline}:${POSTGRES_PASSWORD}@outline-db:5432/${POSTGRES_DB:-outline}?sslmode=disable
       DATABASE_CONNECTION_POOL_MIN: ${DATABASE_CONNECTION_POOL_MIN:-}
       DATABASE_CONNECTION_POOL_MAX: ${DATABASE_CONNECTION_POOL_MAX:-}
 
