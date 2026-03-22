@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  outline:
+    image: ${OUTLINE_IMAGE:-ghcr.io/korjavin/outline-vendor:latest}
+    container_name: ${OUTLINE_CONTAINER_NAME:-outline}
+    restart: unless-stopped
+    depends_on:
+      - outline-db
+      - outline-redis
+    networks:
+      - internal
+      - traefik_network
+    volumes:
+      - ${DATA_PATH:-./data}:/var/lib/outline/data
+    environment:
+      NODE_ENV: production
+
+      # --- Application URL ---
+      URL: https://${OUTLINE_HOST}
+
+      # --- Database ---
+      DATABASE_URL: postgres://${POSTGRES_USER:-outline}:${POSTGRES_PASSWORD}@outline-db:5432/${POSTGRES_DB:-outline}
+      DATABASE_CONNECTION_POOL_MIN: ${DATABASE_CONNECTION_POOL_MIN:-}
+      DATABASE_CONNECTION_POOL_MAX: ${DATABASE_CONNECTION_POOL_MAX:-}
+
+      # --- Redis ---
+      REDIS_URL: redis://outline-redis:6379
+
+      # --- Secrets (REQUIRED) ---
+      SECRET_KEY: ${SECRET_KEY}
+      UTILS_SECRET: ${UTILS_SECRET}
+
+      # --- File Storage ---
+      FILE_STORAGE: local
+      FILE_STORAGE_LOCAL_ROOT_DIR: /var/lib/outline/data
+      FILE_STORAGE_UPLOAD_MAX_SIZE: ${FILE_STORAGE_UPLOAD_MAX_SIZE:-26214400}
+
+      # --- Authentik OIDC ---
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      OIDC_AUTH_URI: ${OIDC_AUTH_URI}
+      OIDC_TOKEN_URI: ${OIDC_TOKEN_URI}
+      OIDC_USERINFO_URI: ${OIDC_USERINFO_URI}
+      OIDC_USERNAME_CLAIM: ${OIDC_USERNAME_CLAIM:-preferred_username}
+      OIDC_DISPLAY_NAME: ${OIDC_DISPLAY_NAME:-Authentik}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
+
+      # --- Email (optional) ---
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_REPLY_EMAIL: ${SMTP_REPLY_EMAIL:-}
+      SMTP_TLS_CIPHERS: ${SMTP_TLS_CIPHERS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+
+      # --- Optional ---
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en_US}
+      FORCE_HTTPS: ${FORCE_HTTPS:-false}
+      ENABLE_UPDATES: ${ENABLE_UPDATES:-false}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK_NAME:-traefik_default}"
+      - "traefik.http.routers.outline.rule=Host(`${OUTLINE_HOST}`)"
+      - "traefik.http.routers.outline.entrypoints=websecure"
+      - "traefik.http.routers.outline.tls.certresolver=${TRAEFIK_CERTRESOLVER:-myresolver}"
+      - "traefik.http.services.outline.loadbalancer.server.port=3000"
+      - "traefik.http.routers.outline.middlewares=auth-errors@docker,forward-auth@docker"
+
+  outline-db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: ${DB_CONTAINER_NAME:-outline-db}
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-outline}
+      POSTGRES_USER: ${POSTGRES_USER:-outline}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-outline}", "-d", "${POSTGRES_DB:-outline}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  outline-redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: ${REDIS_CONTAINER_NAME:-outline-redis}
+    restart: unless-stopped
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  internal:
+    name: ${INTERNAL_NETWORK_NAME:-outline_internal}
+  traefik_network:
+    external: true
+    name: ${TRAEFIK_NETWORK_NAME:-traefik_default}
+
+volumes:
+  db-data:
+    name: ${DB_VOLUME_NAME:-outline_db-data}
