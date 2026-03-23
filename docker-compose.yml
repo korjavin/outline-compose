@@ -70,7 +70,7 @@ services:
       - "traefik.http.routers.outline.entrypoints=websecure"
       - "traefik.http.routers.outline.tls.certresolver=${TRAEFIK_CERTRESOLVER:-myresolver}"
       - "traefik.http.services.outline.loadbalancer.server.port=3000"
-      - "traefik.http.routers.outline.middlewares=auth-errors@docker,forward-auth@docker"
+      - "traefik.http.routers.outline.middlewares=${TRAEFIK_MIDDLEWARES:-}"
 
   outline-db:
     image: ${POSTGRES_IMAGE:-postgres:16-alpine}
