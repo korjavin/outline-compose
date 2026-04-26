@@ -31,7 +31,7 @@ Git-ops deployment of [Outline](https://www.getoutline.com/) — an open-source 
 | `OIDC_USERINFO_URI` | Yes | Authentik userinfo endpoint | `https://auth.yourdomain.com/application/o/userinfo/` |
 | `TRAEFIK_CERTRESOLVER` | No | Cert resolver name | `myresolver` |
 | `TRAEFIK_NETWORK_NAME` | No | Traefik network | `traefik_default` |
-| `DATA_PATH` | No | Local data mount path | `./data` |
+| `DATA_VOLUME_NAME` | No | Named volume for uploaded attachments (back this up) | `outline_data` |
 | `SMTP_HOST` | No | SMTP server for notifications | |
 
 See `.env.example` for the full list with defaults and comments.
