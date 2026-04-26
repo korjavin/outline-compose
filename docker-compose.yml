@@ -63,6 +63,10 @@ services:
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
       LOG_LEVEL: ${LOG_LEVEL:-info}
 
+      # --- Rate Limiter ---
+      RATE_LIMITER_REQUESTS: ${RATE_LIMITER_REQUESTS:-5000}
+      RATE_LIMITER_DURATION_WINDOW: ${RATE_LIMITER_DURATION_WINDOW:-60}
+
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK_NAME:-traefik_default}"
