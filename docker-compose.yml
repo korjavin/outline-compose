@@ -21,8 +21,8 @@ services:
 
       # --- Database ---
       DATABASE_URL: postgres://${POSTGRES_USER:-outline}:${POSTGRES_PASSWORD}@outline-db:5432/${POSTGRES_DB:-outline}?sslmode=disable
-      DATABASE_CONNECTION_POOL_MIN: ${DATABASE_CONNECTION_POOL_MIN:-}
-      DATABASE_CONNECTION_POOL_MAX: ${DATABASE_CONNECTION_POOL_MAX:-}
+      DATABASE_CONNECTION_POOL_MIN: ${DATABASE_CONNECTION_POOL_MIN:-5}
+      DATABASE_CONNECTION_POOL_MAX: ${DATABASE_CONNECTION_POOL_MAX:-20}
 
       # --- Redis ---
       REDIS_URL: redis://outline-redis:6379
@@ -81,6 +81,10 @@ services:
     image: ${POSTGRES_IMAGE:-postgres:16-alpine}
     container_name: ${DB_CONTAINER_NAME:-outline-db}
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - idle_in_transaction_session_timeout=${PG_IDLE_IN_TXN_TIMEOUT_MS:-60000}
     networks:
       - internal
     volumes:
